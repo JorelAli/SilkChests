@@ -1,0 +1,5 @@
+name: SilkChests
+main: io.github.skepter.silkchests.Main
+version: 1.0
+description: Use SilkTouch on chests!
+author: Skepter
