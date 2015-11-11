@@ -4,7 +4,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -18,17 +20,55 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
+import org.yi.acru.bukkit.Lockette.Lockette;
+
+import com.sk89q.worldguard.bukkit.WGBukkit;
 
 public class Main extends JavaPlugin implements Listener {
-	
+
+	private boolean hasLockette = false;
+	private boolean hasWorldGuard = false;
+
 	public void onEnable() {
 		getServer().getPluginManager().registerEvents(this, this);
+		if (Bukkit.getPluginManager().getPlugin("Lockette") != null)
+			hasLockette = true;
+		if (Bukkit.getPluginManager().getPlugin("WorldGuard") != null)
+			hasWorldGuard = true;
+	}
+
+	/* Checks if the player is allowed to place the block */
+	public boolean placingChecks(BlockPlaceEvent event) {
+		ItemStack is = event.getItemInHand();
+		if (hasWorldGuard) {
+			return (is.getType().equals(Material.CHEST) && is.getItemMeta().getLore().contains("SilkChest") && WGBukkit.getPlugin().canBuild(event.getPlayer(), event.getBlock()));
+		} else {
+			return (is.getType().equals(Material.CHEST) && is.getItemMeta().getLore().contains("SilkChest"));
+		}
+	}
+
+	/* Checks if the player is allowed to break the block */
+	public boolean breakingChecks(BlockBreakEvent event) {
+		Block block = event.getBlock();
+		Player player = event.getPlayer();
+		if (hasWorldGuard && hasLockette) {
+			return (player.hasPermission("silkchest.use") && block.getType().equals(Material.CHEST) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest
+					&& WGBukkit.getPlugin().canBuild(player, block) && Lockette.isOwner(block, player));
+		} else if (hasWorldGuard) {
+			return (player.hasPermission("silkchest.use") && block.getType().equals(Material.CHEST) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest && WGBukkit.getPlugin().canBuild(player,
+					block));
+		} else if (hasLockette) {
+			return (player.hasPermission("silkchest.use") && block.getType().equals(Material.CHEST) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest && Lockette.isOwner(block, player));
+		} else {
+			return (player.hasPermission("silkchest.use") && block.getType().equals(Material.CHEST) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest);
+		}
+
 	}
 
 	@EventHandler
 	public void blockPlace(BlockPlaceEvent event) {
-		if ((event.getItemInHand().getType().equals(Material.CHEST)) && (event.getItemInHand().getItemMeta().getLore().contains("SilkChest"))) {
-			
+		if (placingChecks(event)) {
+
 			/* Get deserialized items and put it into the chest */
 			Collection<ItemStack> items = deserialize(Utils.getNBT(event.getItemInHand()));
 			if ((event.getBlock().getState() instanceof Chest)) {
@@ -44,8 +84,7 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void blockBreak(BlockBreakEvent event) {
-		if ((event.getPlayer().hasPermission("silkchest.use")) && (event.getBlock().getType().equals(Material.CHEST)) && (event.getPlayer().getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH))
-				&& ((event.getBlock().getState() instanceof Chest))) {
+		if (breakingChecks(event)) {
 
 			/* Serialize chest contents */
 			Player player = event.getPlayer();
