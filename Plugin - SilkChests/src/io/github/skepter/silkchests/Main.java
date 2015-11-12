@@ -45,11 +45,15 @@ public class Main extends JavaPlugin implements Listener {
 	/* Checks if the player is allowed to place the block */
 	public boolean placingChecks(BlockPlaceEvent event) {
 		ItemStack is = event.getItemInHand();
-		if(is != null) {
-			if (hasWorldGuard) {
-				return (is.getType().equals(Material.CHEST) && is.getItemMeta().getLore().contains("SilkChest") && WGBukkit.getPlugin().canBuild(event.getPlayer(), event.getBlock()));
-			} else {
-				return (is.getType().equals(Material.CHEST) && is.getItemMeta().getLore().contains("SilkChest"));
+		if (is != null) {
+			if (is.getType().equals(Material.CHEST) && is.getItemMeta().hasLore()) {
+				if (is.getItemMeta().getLore().get(0).contains("SilkChest")) {
+					if (hasWorldGuard) {
+						return (WGBukkit.getPlugin().canBuild(event.getPlayer(), event.getBlock()));
+					} else {
+						return true;
+					}
+				}
 			}
 		}
 		return false;
@@ -98,16 +102,16 @@ public class Main extends JavaPlugin implements Listener {
 			Player player = event.getPlayer();
 			Chest chest = (Chest) event.getBlock().getState();
 			event.setCancelled(true);
-			
+
 			/* Prevents SilkChests being stored in SilkChests */
-			if(!getConfig().getBoolean("canStoreChestInChest")) {
-				
+			if (!getConfig().getBoolean("canStoreChestInChest")) {
+
 				/* Removes the SilkChests from the chest and drops them */
-				for(int i = 0; i < chest.getInventory().getContents().length; i++) {
+				for (int i = 0; i < chest.getInventory().getContents().length; i++) {
 					ItemStack is = chest.getInventory().getItem(i);
-					if(is != null) {
-						if(is.getType().equals(Material.CHEST)) {
-							if(is.getItemMeta().getLore().get(0).equals("SilkChest")) {
+					if (is != null) {
+						if (is.getType().equals(Material.CHEST)) {
+							if (is.getItemMeta().getLore().get(0).equals("SilkChest")) {
 								player.getWorld().dropItem(event.getBlock().getLocation(), is);
 								chest.getInventory().remove(is);
 							}
@@ -115,7 +119,7 @@ public class Main extends JavaPlugin implements Listener {
 					}
 				}
 			}
-			
+
 			String serializedString = serialize(Arrays.asList(chest.getInventory().getContents()));
 
 			/* Create the chest item */
