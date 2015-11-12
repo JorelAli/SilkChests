@@ -31,10 +31,15 @@ public class Main extends JavaPlugin implements Listener {
 
 	public void onEnable() {
 		getServer().getPluginManager().registerEvents(this, this);
+		saveDefaultConfig();
 		if (Bukkit.getPluginManager().getPlugin("Lockette") != null)
 			hasLockette = true;
 		if (Bukkit.getPluginManager().getPlugin("WorldGuard") != null)
 			hasWorldGuard = true;
+	}
+
+	public void onDisable() {
+		saveConfig();
 	}
 
 	/* Checks if the player is allowed to place the block */
@@ -90,6 +95,22 @@ public class Main extends JavaPlugin implements Listener {
 			Player player = event.getPlayer();
 			Chest chest = (Chest) event.getBlock().getState();
 			event.setCancelled(true);
+			
+			/* Prevents SilkChests being stored in SilkChests */
+			if(!getConfig().getBoolean("canStoreChestInChest")) {
+				
+				/* Removes the SilkChests from the chest and drops them */
+				for(int i = 0; i < chest.getInventory().getContents().length; i++) {
+					ItemStack is = chest.getInventory().getItem(i);
+					if(is.getType().equals(Material.CHEST)) {
+						if(is.getItemMeta().getLore().get(0).equals("SilkChest")) {
+							player.getWorld().dropItem(event.getBlock().getLocation(), is);
+							chest.getInventory().remove(is);
+						}
+					}
+				}
+			}
+			
 			String serializedString = serialize(Arrays.asList(chest.getInventory().getContents()));
 
 			/* Create the chest item */
