@@ -45,11 +45,14 @@ public class Main extends JavaPlugin implements Listener {
 	/* Checks if the player is allowed to place the block */
 	public boolean placingChecks(BlockPlaceEvent event) {
 		ItemStack is = event.getItemInHand();
-		if (hasWorldGuard) {
-			return (is.getType().equals(Material.CHEST) && is.getItemMeta().getLore().contains("SilkChest") && WGBukkit.getPlugin().canBuild(event.getPlayer(), event.getBlock()));
-		} else {
-			return (is.getType().equals(Material.CHEST) && is.getItemMeta().getLore().contains("SilkChest"));
+		if(is != null) {
+			if (hasWorldGuard) {
+				return (is.getType().equals(Material.CHEST) && is.getItemMeta().getLore().contains("SilkChest") && WGBukkit.getPlugin().canBuild(event.getPlayer(), event.getBlock()));
+			} else {
+				return (is.getType().equals(Material.CHEST) && is.getItemMeta().getLore().contains("SilkChest"));
+			}
 		}
+		return false;
 	}
 
 	/* Checks if the player is allowed to break the block */
@@ -102,10 +105,12 @@ public class Main extends JavaPlugin implements Listener {
 				/* Removes the SilkChests from the chest and drops them */
 				for(int i = 0; i < chest.getInventory().getContents().length; i++) {
 					ItemStack is = chest.getInventory().getItem(i);
-					if(is.getType().equals(Material.CHEST)) {
-						if(is.getItemMeta().getLore().get(0).equals("SilkChest")) {
-							player.getWorld().dropItem(event.getBlock().getLocation(), is);
-							chest.getInventory().remove(is);
+					if(is != null) {
+						if(is.getType().equals(Material.CHEST)) {
+							if(is.getItemMeta().getLore().get(0).equals("SilkChest")) {
+								player.getWorld().dropItem(event.getBlock().getLocation(), is);
+								chest.getInventory().remove(is);
+							}
 						}
 					}
 				}
