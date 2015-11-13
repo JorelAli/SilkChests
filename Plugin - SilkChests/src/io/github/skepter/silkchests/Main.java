@@ -111,9 +111,11 @@ public class Main extends JavaPlugin implements Listener {
 					ItemStack is = chest.getInventory().getItem(i);
 					if (is != null) {
 						if (is.getType().equals(Material.CHEST)) {
-							if (is.getItemMeta().getLore().get(0).equals("SilkChest")) {
-								player.getWorld().dropItem(event.getBlock().getLocation(), is);
-								chest.getInventory().remove(is);
+							if (!is.getItemMeta().getLore().isEmpty()) {
+								if (is.getItemMeta().getLore().get(0).equals("SilkChest")) {
+									player.getWorld().dropItem(event.getBlock().getLocation(), is);
+									chest.getInventory().remove(is);
+								}
 							}
 						}
 					}
