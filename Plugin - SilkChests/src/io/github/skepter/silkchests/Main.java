@@ -42,11 +42,20 @@ public class Main extends JavaPlugin implements Listener {
 		saveConfig();
 	}
 
+	/* Checks if the block is a chest or a trapped chest */
+	public boolean chestCheck(Material material) {
+		if (getConfig().getBoolean("useTrappedChests")) {
+			return (material.equals(Material.CHEST) || material.equals(Material.TRAPPED_CHEST));
+		} else {
+			return (material.equals(Material.CHEST));
+		}
+	}
+
 	/* Checks if the player is allowed to place the block */
 	public boolean placingChecks(BlockPlaceEvent event) {
 		ItemStack is = event.getItemInHand();
 		if (is != null) {
-			if (is.getType().equals(Material.CHEST) && is.getItemMeta().hasLore()) {
+			if (chestCheck(is.getType()) && is.getItemMeta().hasLore()) {
 				if (is.getItemMeta().getLore().get(0).contains("SilkChest")) {
 					if (hasWorldGuard) {
 						return (WGBukkit.getPlugin().canBuild(event.getPlayer(), event.getBlock()));
@@ -64,15 +73,15 @@ public class Main extends JavaPlugin implements Listener {
 		Block block = event.getBlock();
 		Player player = event.getPlayer();
 		if (hasWorldGuard && hasLockette) {
-			return (player.hasPermission("silkchest.use") && block.getType().equals(Material.CHEST) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest
+			return (player.hasPermission("silkchest.use") && chestCheck(block.getType()) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest
 					&& WGBukkit.getPlugin().canBuild(player, block) && Lockette.isOwner(block, player));
 		} else if (hasWorldGuard) {
-			return (player.hasPermission("silkchest.use") && block.getType().equals(Material.CHEST) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest && WGBukkit.getPlugin().canBuild(player,
+			return (player.hasPermission("silkchest.use") && chestCheck(block.getType()) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest && WGBukkit.getPlugin().canBuild(player,
 					block));
 		} else if (hasLockette) {
-			return (player.hasPermission("silkchest.use") && block.getType().equals(Material.CHEST) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest && Lockette.isOwner(block, player));
+			return (player.hasPermission("silkchest.use") && chestCheck(block.getType()) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest && Lockette.isOwner(block, player));
 		} else {
-			return (player.hasPermission("silkchest.use") && block.getType().equals(Material.CHEST) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest);
+			return (player.hasPermission("silkchest.use") && chestCheck(block.getType()) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest);
 		}
 
 	}
@@ -110,7 +119,7 @@ public class Main extends JavaPlugin implements Listener {
 				for (int i = 0; i < chest.getInventory().getContents().length; i++) {
 					ItemStack is = chest.getInventory().getItem(i);
 					if (is != null) {
-						if (is.getType().equals(Material.CHEST) && is.hasItemMeta()) {
+						if (chestCheck(is.getType()) && is.hasItemMeta()) {
 							if (is.getItemMeta().hasLore()) {
 								if (!is.getItemMeta().getLore().isEmpty()) {
 									if (is.getItemMeta().getLore().get(0).equals("SilkChest")) {
@@ -128,6 +137,11 @@ public class Main extends JavaPlugin implements Listener {
 
 			/* Create the chest item */
 			ItemStack is = new ItemStack(Material.CHEST);
+			if (getConfig().getBoolean("useTrappedChests")) {
+				if(event.getBlock().getType().equals(Material.TRAPPED_CHEST)) {
+					is = new ItemStack(Material.TRAPPED_CHEST);
+				}
+			}
 			ItemMeta meta = is.getItemMeta();
 			meta.setLore(Arrays.asList(new String[] { "SilkChest" }));
 			is.setItemMeta(meta);
