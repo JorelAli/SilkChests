@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
+import org.bukkit.block.DoubleChest;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
@@ -73,11 +74,10 @@ public class Main extends JavaPlugin implements Listener {
 		Block block = event.getBlock();
 		Player player = event.getPlayer();
 		if (hasWorldGuard && hasLockette) {
-			return (player.hasPermission("silkchest.use") && chestCheck(block.getType()) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest
-					&& WGBukkit.getPlugin().canBuild(player, block) && Lockette.isOwner(block, player));
+			return (player.hasPermission("silkchest.use") && chestCheck(block.getType()) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest && WGBukkit.getPlugin().canBuild(player, block) && Lockette
+					.isOwner(block, player));
 		} else if (hasWorldGuard) {
-			return (player.hasPermission("silkchest.use") && chestCheck(block.getType()) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest && WGBukkit.getPlugin().canBuild(player,
-					block));
+			return (player.hasPermission("silkchest.use") && chestCheck(block.getType()) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest && WGBukkit.getPlugin().canBuild(player, block));
 		} else if (hasLockette) {
 			return (player.hasPermission("silkchest.use") && chestCheck(block.getType()) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest && Lockette.isOwner(block, player));
 		} else {
@@ -102,6 +102,15 @@ public class Main extends JavaPlugin implements Listener {
 			}
 		}
 	}
+	
+	@EventHandler
+	public void blockBreakDoublechest(BlockBreakEvent event) {
+		//Handle doublechests.
+		/*
+		 * I've decided to handle doublechests separately
+		 * Because of the way they mess things up :P
+		 */
+	}
 
 	@EventHandler
 	public void blockBreak(BlockBreakEvent event) {
@@ -111,6 +120,14 @@ public class Main extends JavaPlugin implements Listener {
 			Player player = event.getPlayer();
 			Chest chest = (Chest) event.getBlock().getState();
 			event.setCancelled(true);
+
+			if (event.getBlock().getState() instanceof DoubleChest) {
+				DoubleChest c = (DoubleChest) event.getBlock().getState();
+				Chest left = (Chest) c.getLeftSide();
+				Chest right = (Chest) c.getRightSide();
+				
+				
+			}
 
 			/* Prevents SilkChests being stored in SilkChests */
 			if (!getConfig().getBoolean("canStoreChestInChest")) {
@@ -138,7 +155,7 @@ public class Main extends JavaPlugin implements Listener {
 			/* Create the chest item */
 			ItemStack is = new ItemStack(Material.CHEST);
 			if (getConfig().getBoolean("useTrappedChests")) {
-				if(event.getBlock().getType().equals(Material.TRAPPED_CHEST)) {
+				if (event.getBlock().getType().equals(Material.TRAPPED_CHEST)) {
 					is = new ItemStack(Material.TRAPPED_CHEST);
 				}
 			}
