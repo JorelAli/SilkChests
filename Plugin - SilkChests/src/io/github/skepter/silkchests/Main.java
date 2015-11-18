@@ -102,32 +102,83 @@ public class Main extends JavaPlugin implements Listener {
 			}
 		}
 	}
-	
+
 	@EventHandler
 	public void blockBreakDoublechest(BlockBreakEvent event) {
-		//Handle doublechests.
+		// Handle doublechests.
 		/*
-		 * I've decided to handle doublechests separately
-		 * Because of the way they mess things up :P
+		 * I've decided to handle doublechests separately Because of the way
+		 * they mess things up :P
 		 */
+
+		if (breakingChecks(event) && event.getBlock().getState() instanceof DoubleChest) {
+			DoubleChest c = (DoubleChest) event.getBlock().getState();
+			Chest left = (Chest) c.getLeftSide();
+			Chest right = (Chest) c.getRightSide();
+			Chest chest = null;
+			
+			if(event.getBlock().equals(left.getBlock())) {
+				chest = left;
+			} else if (event.getBlock().equals(right.getBlock())){
+				chest = right;
+			} else {
+				throw new NullPointerException();
+			}
+
+			/* Serialize chest contents */
+			Player player = event.getPlayer();
+			event.setCancelled(true);
+
+			/* Prevents SilkChests being stored in SilkChests */
+			if (!getConfig().getBoolean("canStoreChestInChest")) {
+
+				/* Removes the SilkChests from the chest and drops them */
+				for (int i = 0; i < chest.getInventory().getContents().length; i++) {
+					ItemStack is = chest.getInventory().getItem(i);
+					if (is != null) {
+						if (chestCheck(is.getType()) && is.hasItemMeta()) {
+							if (is.getItemMeta().hasLore()) {
+								if (!is.getItemMeta().getLore().isEmpty()) {
+									if (is.getItemMeta().getLore().get(0).equals("SilkChest")) {
+										player.getWorld().dropItem(event.getBlock().getLocation(), is);
+										chest.getInventory().remove(is);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			String serializedString = serialize(Arrays.asList(chest.getInventory().getContents()));
+
+			/* Create the chest item */
+			ItemStack is = new ItemStack(Material.CHEST);
+			
+			ItemMeta meta = is.getItemMeta();
+			meta.setLore(Arrays.asList(new String[] { "SilkChest" }));
+			is.setItemMeta(meta);
+
+			/*
+			 * Add the contents to the chest, drop the item and remove the chest
+			 * block
+			 */
+			ItemStack newItemStack = Utils.setNBT(is, serializedString);
+			player.getWorld().dropItem(event.getBlock().getLocation(), newItemStack);
+			chest.getInventory().clear();
+			event.getBlock().setType(Material.AIR);
+
+		}
 	}
 
 	@EventHandler
-	public void blockBreak(BlockBreakEvent event) {
-		if (breakingChecks(event)) {
+	public void blockBreakChest(BlockBreakEvent event) {
+		if (breakingChecks(event) && !(event.getBlock().getState() instanceof DoubleChest)) {
 
 			/* Serialize chest contents */
 			Player player = event.getPlayer();
 			Chest chest = (Chest) event.getBlock().getState();
 			event.setCancelled(true);
-
-			if (event.getBlock().getState() instanceof DoubleChest) {
-				DoubleChest c = (DoubleChest) event.getBlock().getState();
-				Chest left = (Chest) c.getLeftSide();
-				Chest right = (Chest) c.getRightSide();
-				
-				
-			}
 
 			/* Prevents SilkChests being stored in SilkChests */
 			if (!getConfig().getBoolean("canStoreChestInChest")) {

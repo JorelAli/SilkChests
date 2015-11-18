@@ -37,5 +37,9 @@ public class Utils {
 		}
 		return "";
 	}
+	
+	public static boolean isSilkItem(ItemStack is) {
+		return getNBT(is) != null;
+	}
 
 }
