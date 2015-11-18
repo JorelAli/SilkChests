@@ -121,10 +121,11 @@ public class Main extends JavaPlugin implements Listener {
 
 		if (breakingChecks(event) && isDoubleChest(event.getBlock())) {
 			System.out.println("Doublechest");
-			DoubleChest c = (DoubleChest) event.getBlock().getState();
+			Chest c = (Chest) event.getBlock().getState();
+			DoubleChest dc = (DoubleChest) c.getInventory().getHolder();
 			
-			Chest left = (Chest) c.getLeftSide();
-			Chest right = (Chest) c.getRightSide();
+			Chest left = (Chest) dc.getLeftSide();
+			Chest right = (Chest) dc.getRightSide();
 			Chest chest = null;
 			
 			if(event.getBlock().equals(left.getBlock())) {
