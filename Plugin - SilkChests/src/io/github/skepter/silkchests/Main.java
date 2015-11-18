@@ -103,6 +103,14 @@ public class Main extends JavaPlugin implements Listener {
 		}
 	}
 
+	public boolean isDoubleChest(Block block) {
+		if(block.getState() instanceof Chest) {
+			Chest c = (Chest) block.getState();
+			return (c.getInventory().getHolder() instanceof DoubleChest);
+		}
+		return false;
+	}
+	
 	@EventHandler
 	public void blockBreakDoublechest(BlockBreakEvent event) {
 		// Handle doublechests.
@@ -111,8 +119,10 @@ public class Main extends JavaPlugin implements Listener {
 		 * they mess things up :P
 		 */
 
-		if (breakingChecks(event) && event.getBlock().getState() instanceof DoubleChest) {
+		if (breakingChecks(event) && isDoubleChest(event.getBlock())) {
+			System.out.println("Doublechest");
 			DoubleChest c = (DoubleChest) event.getBlock().getState();
+			
 			Chest left = (Chest) c.getLeftSide();
 			Chest right = (Chest) c.getRightSide();
 			Chest chest = null;
@@ -173,8 +183,9 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void blockBreakChest(BlockBreakEvent event) {
-		if (breakingChecks(event) && !(event.getBlock().getState() instanceof DoubleChest)) {
-
+		if (breakingChecks(event) && !(isDoubleChest(event.getBlock()))) {
+			System.out.println("Chest");
+			
 			/* Serialize chest contents */
 			Player player = event.getPlayer();
 			Chest chest = (Chest) event.getBlock().getState();
