@@ -17,6 +17,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.inventory.DoubleChestInventory;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -120,18 +122,22 @@ public class Main extends JavaPlugin implements Listener {
 		 */
 
 		if (breakingChecks(event) && isDoubleChest(event.getBlock())) {
-			System.out.println("Doublechest");
 			Chest c = (Chest) event.getBlock().getState();
 			DoubleChest dc = (DoubleChest) c.getInventory().getHolder();
 			
-			Chest left = (Chest) dc.getLeftSide();
+			DoubleChestInventory inv = (DoubleChestInventory) dc.getInventory();
+
+			Chest left = (Chest) dc.getLeftSide(); 
+			Inventory leftInv = inv.getLeftSide();
 			Chest right = (Chest) dc.getRightSide();
-			Chest chest = null;
+			Inventory rightInv = inv.getRightSide();
+			
+			Inventory chestInv = null;
 			
 			if(event.getBlock().equals(left.getBlock())) {
-				chest = left;
+				chestInv = leftInv;
 			} else if (event.getBlock().equals(right.getBlock())){
-				chest = right;
+				chestInv = rightInv;
 			} else {
 				throw new NullPointerException();
 			}
@@ -144,15 +150,15 @@ public class Main extends JavaPlugin implements Listener {
 			if (!getConfig().getBoolean("canStoreChestInChest")) {
 
 				/* Removes the SilkChests from the chest and drops them */
-				for (int i = 0; i < chest.getInventory().getContents().length; i++) {
-					ItemStack is = chest.getInventory().getItem(i);
+				for (int i = 0; i < chestInv.getContents().length; i++) {
+					ItemStack is = chestInv.getItem(i);
 					if (is != null) {
 						if (chestCheck(is.getType()) && is.hasItemMeta()) {
 							if (is.getItemMeta().hasLore()) {
 								if (!is.getItemMeta().getLore().isEmpty()) {
 									if (is.getItemMeta().getLore().get(0).equals("SilkChest")) {
 										player.getWorld().dropItem(event.getBlock().getLocation(), is);
-										chest.getInventory().remove(is);
+										chestInv.remove(is);
 									}
 								}
 							}
@@ -161,7 +167,7 @@ public class Main extends JavaPlugin implements Listener {
 				}
 			}
 
-			String serializedString = serialize(Arrays.asList(chest.getInventory().getContents()));
+			String serializedString = serialize(Arrays.asList(chestInv.getContents()));
 
 			/* Create the chest item */
 			ItemStack is = new ItemStack(Material.CHEST);
@@ -176,7 +182,7 @@ public class Main extends JavaPlugin implements Listener {
 			 */
 			ItemStack newItemStack = Utils.setNBT(is, serializedString);
 			player.getWorld().dropItem(event.getBlock().getLocation(), newItemStack);
-			chest.getInventory().clear();
+			chestInv.clear();
 			event.getBlock().setType(Material.AIR);
 
 		}
@@ -185,7 +191,6 @@ public class Main extends JavaPlugin implements Listener {
 	@EventHandler
 	public void blockBreakChest(BlockBreakEvent event) {
 		if (breakingChecks(event) && !(isDoubleChest(event.getBlock()))) {
-			System.out.println("Chest");
 			
 			/* Serialize chest contents */
 			Player player = event.getPlayer();
