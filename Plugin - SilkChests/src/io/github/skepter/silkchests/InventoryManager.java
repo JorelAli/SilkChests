@@ -10,8 +10,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 public class InventoryManager {
 
+	/* Removes the SilkChests from the chest and drops them */
 	public static Inventory canStoreChestInChest(Inventory chestInv, Block block) {
-		/* Removes the SilkChests from the chest and drops them */
 		for (int i = 0; i < chestInv.getContents().length; i++) {
 			ItemStack is = chestInv.getItem(i);
 			if (is != null) {
@@ -30,6 +30,7 @@ public class InventoryManager {
 		return chestInv;
 	}
 	
+	/* Drops the SilkChest */
 	public static void addMetaAndDrop(ItemStack is, Inventory chestInv, Block block) {
 		String serializedString = Utils.serialize(Arrays.asList(chestInv.getContents()));
 

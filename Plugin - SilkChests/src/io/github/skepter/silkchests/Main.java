@@ -29,8 +29,6 @@ public class Main extends JavaPlugin implements Listener {
 	 * which can be toggled * Add a toggle for enabling/disabling silkchests in
 	 * the config * A reload command? * A command to state what's enabled and
 	 * what's disabled
-	 * 
-	 * * CLEAN UP THIS CODE! IT'S IN SUCH A STATE XD
 	 */
 	private boolean hasLockette = false;
 	private boolean hasWorldGuard = false;
@@ -111,7 +109,7 @@ public class Main extends JavaPlugin implements Listener {
 	}
 
 	@EventHandler
-	public void blockBreakDoublechest(BlockBreakEvent event) {
+	public void doubleChestBreak(BlockBreakEvent event) {
 		if (breakingChecks(event) && Utils.isDoubleChest(event.getBlock())) {
 			event.setCancelled(true);
 			Block block = event.getBlock();
@@ -142,7 +140,7 @@ public class Main extends JavaPlugin implements Listener {
 	}
 
 	@EventHandler
-	public void blockBreakChest(BlockBreakEvent event) {
+	public void chestBreak(BlockBreakEvent event) {
 		if (breakingChecks(event) && !(Utils.isDoubleChest(event.getBlock()))) {
 			event.setCancelled(true);
 			Chest chest = (Chest) event.getBlock().getState();

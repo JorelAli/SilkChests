@@ -3,6 +3,7 @@ package io.github.skepter.silkchests;
 import java.lang.reflect.Field;
 import org.bukkit.Bukkit;
 
+/* Condensed ReflectionUtils from AllAssets */
 public class ReflectionUtils {
 	
 	private final String packageName;
