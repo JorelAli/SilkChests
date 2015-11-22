@@ -33,6 +33,9 @@ public class Main extends JavaPlugin implements Listener {
 	private boolean hasLockette = false;
 	private boolean hasWorldGuard = false;
 
+	protected static boolean trappedChests = true;
+	protected static boolean chestInChest = false;
+
 	@Override
 	public void onEnable() {
 		getServer().getPluginManager().registerEvents(this, this);
@@ -41,6 +44,18 @@ public class Main extends JavaPlugin implements Listener {
 			hasLockette = true;
 		if (Bukkit.getPluginManager().getPlugin("WorldGuard") != null)
 			hasWorldGuard = true;
+		getCommand("silkchests").setExecutor(new SilkChestsCommand(this));
+		updateInternalConfig();
+
+	}
+
+	/*
+	 * Because this plugin is small, we can afford to use up some small space in
+	 * the memory
+	 */
+	private void updateInternalConfig() {
+		trappedChests = getConfig().getBoolean("useTrappedChests");
+		chestInChest = getConfig().getBoolean("canStoreChestInChest");
 	}
 
 	@Override
@@ -48,15 +63,11 @@ public class Main extends JavaPlugin implements Listener {
 		saveConfig();
 	}
 
-	public static Main getInstance() {
-		return JavaPlugin.getPlugin(Main.class);
-	}
-
 	/*
 	 * Checks if the player is allowed to place the block (and it is a
 	 * silkchest)
 	 */
-	public boolean placingChecks(BlockPlaceEvent event) {
+	protected boolean placingChecks(BlockPlaceEvent event) {
 		ItemStack is = event.getItemInHand();
 		if (is != null) {
 			if (Utils.isChest(is.getType()) && is.getItemMeta().hasLore()) {
@@ -73,7 +84,7 @@ public class Main extends JavaPlugin implements Listener {
 	}
 
 	/* Checks if the player is allowed to break the block */
-	public boolean breakingChecks(BlockBreakEvent event) {
+	protected boolean breakingChecks(BlockBreakEvent event) {
 		Block block = event.getBlock();
 		Player player = event.getPlayer();
 		if (!player.hasPermission("silkchest.use") || !Utils.isChest(block.getType())
@@ -132,7 +143,7 @@ public class Main extends JavaPlugin implements Listener {
 			else
 				throw new NullPointerException();
 
-			if (!getConfig().getBoolean("canStoreChestInChest"))
+			if (!chestInChest)
 				chestInv = InventoryManager.canStoreChestInChest(chestInv, block);
 
 			InventoryManager.addMetaAndDrop(new ItemStack(Material.CHEST), chestInv, event.getBlock());
@@ -145,16 +156,16 @@ public class Main extends JavaPlugin implements Listener {
 			event.setCancelled(true);
 			Chest chest = (Chest) event.getBlock().getState();
 			Inventory chestInv = chest.getInventory();
-			
-			if (!getConfig().getBoolean("canStoreChestInChest"))
+
+			if (!chestInChest)
 				chestInv = InventoryManager.canStoreChestInChest(chestInv, event.getBlock());
 
 			ItemStack is = new ItemStack(Material.CHEST);
-			
-			if (getConfig().getBoolean("useTrappedChests"))
+
+			if (trappedChests)
 				if (event.getBlock().getType().equals(Material.TRAPPED_CHEST))
 					is = new ItemStack(Material.TRAPPED_CHEST);
-			
+
 			InventoryManager.addMetaAndDrop(is, chestInv, event.getBlock());
 		}
 	}

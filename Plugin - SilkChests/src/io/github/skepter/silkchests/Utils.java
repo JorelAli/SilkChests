@@ -14,7 +14,7 @@ import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 public class Utils {
 
 	/* Writes NBT data to an itemstack */
-	public static ItemStack setNBT(ItemStack is, String serializedString) {
+	protected static ItemStack setNBT(ItemStack is, String serializedString) {
 		try {
 			ReflectionUtils utils = new ReflectionUtils();
 			Object nmsItem = new ReflectionUtils().craftItemStack.getDeclaredMethod("asNMSCopy",
@@ -38,7 +38,7 @@ public class Utils {
 	}
 
 	/* Gets the NBT data from an item */
-	public static String getNBT(ItemStack is) {
+	protected static String getNBT(ItemStack is) {
 		try {
 			Object nmsItem = new ReflectionUtils().craftItemStack.getDeclaredMethod("asNMSCopy",
 					new Class[] { ItemStack.class }).invoke(null, new Object[] { is });
@@ -55,13 +55,13 @@ public class Utils {
 	}
 
 	/* Checks if the item is a SilkItem (e.g. a silkchest) */
-	public static boolean isSilkItem(ItemStack is) {
+	protected static boolean isSilkItem(ItemStack is) {
 		return getNBT(is) != null;
 	}
 	
 
 	/* Turns item stacks into a string */
-	public static String serialize(List<ItemStack> items) {
+	protected static String serialize(List<ItemStack> items) {
 		YamlConfiguration config = new YamlConfiguration();
 		config.set("Items", items);
 		return Base64Coder.encodeString(config.saveToString());
@@ -69,7 +69,7 @@ public class Utils {
 
 	/* Converts the string back into itemstacks */
 	@SuppressWarnings("unchecked")
-	public static List<ItemStack> deserialize(String s) {
+	protected static List<ItemStack> deserialize(String s) {
 		YamlConfiguration config = new YamlConfiguration();
 		try {
 			config.loadFromString(Base64Coder.decodeString(s));
@@ -80,8 +80,8 @@ public class Utils {
 	}
 	
 	/* Checks if the block is a chest or a trapped chest */
-	public static boolean isChest(Material material) {
-		if (Main.getInstance().getConfig().getBoolean("useTrappedChests")) {
+	protected static boolean isChest(Material material) {
+		if (Main.trappedChests) {
 			return (material.equals(Material.CHEST) || material.equals(Material.TRAPPED_CHEST));
 		} else {
 			return (material.equals(Material.CHEST));
@@ -89,7 +89,7 @@ public class Utils {
 	}
 
 	/* Checks if the block is a doublechest */
-	public static boolean isDoubleChest(Block block) {
+	protected static boolean isDoubleChest(Block block) {
 		if (block.getState() instanceof Chest) {
 			Chest c = (Chest) block.getState();
 			return (c.getInventory().getHolder() instanceof DoubleChest);
