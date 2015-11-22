@@ -1,16 +1,12 @@
 package io.github.skepter.silkchests;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
-import org.bukkit.configuration.InvalidConfigurationException;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -20,18 +16,26 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 import org.yi.acru.bukkit.Lockette.Lockette;
 
 import com.sk89q.worldguard.bukkit.WGBukkit;
 
 public class Main extends JavaPlugin implements Listener {
 
+	/*
+	 * Main plans for version 1.5: * Allow the option to remove the "SilkChest"
+	 * lore from an item * Look into adding silkfurnaces and other silk items
+	 * which can be toggled * Add a toggle for enabling/disabling silkchests in
+	 * the config * A reload command? * A command to state what's enabled and
+	 * what's disabled
+	 * 
+	 * * CLEAN UP THIS CODE! IT'S IN SUCH A STATE XD
+	 */
 	private boolean hasLockette = false;
 	private boolean hasWorldGuard = false;
 
+	@Override
 	public void onEnable() {
 		getServer().getPluginManager().registerEvents(this, this);
 		saveDefaultConfig();
@@ -41,24 +45,23 @@ public class Main extends JavaPlugin implements Listener {
 			hasWorldGuard = true;
 	}
 
+	@Override
 	public void onDisable() {
 		saveConfig();
 	}
 
-	/* Checks if the block is a chest or a trapped chest */
-	public boolean chestCheck(Material material) {
-		if (getConfig().getBoolean("useTrappedChests")) {
-			return (material.equals(Material.CHEST) || material.equals(Material.TRAPPED_CHEST));
-		} else {
-			return (material.equals(Material.CHEST));
-		}
+	public static Main getInstance() {
+		return JavaPlugin.getPlugin(Main.class);
 	}
 
-	/* Checks if the player is allowed to place the block */
+	/*
+	 * Checks if the player is allowed to place the block (and it is a
+	 * silkchest)
+	 */
 	public boolean placingChecks(BlockPlaceEvent event) {
 		ItemStack is = event.getItemInHand();
 		if (is != null) {
-			if (chestCheck(is.getType()) && is.getItemMeta().hasLore()) {
+			if (Utils.isChest(is.getType()) && is.getItemMeta().hasLore()) {
 				if (is.getItemMeta().getLore().get(0).contains("SilkChest")) {
 					if (hasWorldGuard) {
 						return (WGBukkit.getPlugin().canBuild(event.getPlayer(), event.getBlock()));
@@ -75,17 +78,19 @@ public class Main extends JavaPlugin implements Listener {
 	public boolean breakingChecks(BlockBreakEvent event) {
 		Block block = event.getBlock();
 		Player player = event.getPlayer();
+		if (!player.hasPermission("silkchest.use") || !Utils.isChest(block.getType())
+				|| !player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH)
+				|| !(block.getState() instanceof Chest))
+			return false;
 		if (hasWorldGuard && hasLockette) {
-			return (player.hasPermission("silkchest.use") && chestCheck(block.getType()) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest && WGBukkit.getPlugin().canBuild(player, block) && Lockette
-					.isOwner(block, player));
+			return (WGBukkit.getPlugin().canBuild(player, block) && Lockette.isOwner(block, player));
 		} else if (hasWorldGuard) {
-			return (player.hasPermission("silkchest.use") && chestCheck(block.getType()) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest && WGBukkit.getPlugin().canBuild(player, block));
+			return (WGBukkit.getPlugin().canBuild(player, block));
 		} else if (hasLockette) {
-			return (player.hasPermission("silkchest.use") && chestCheck(block.getType()) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest && Lockette.isOwner(block, player));
+			return (Lockette.isOwner(block, player));
 		} else {
-			return (player.hasPermission("silkchest.use") && chestCheck(block.getType()) && player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) && block.getState() instanceof Chest);
+			return true;
 		}
-
 	}
 
 	@EventHandler
@@ -93,7 +98,7 @@ public class Main extends JavaPlugin implements Listener {
 		if (placingChecks(event)) {
 
 			/* Get deserialized items and put it into the chest */
-			Collection<ItemStack> items = deserialize(Utils.getNBT(event.getItemInHand()));
+			Collection<ItemStack> items = Utils.deserialize(Utils.getNBT(event.getItemInHand()));
 			if ((event.getBlock().getState() instanceof Chest)) {
 				Chest chest = (Chest) event.getBlock().getState();
 				for (ItemStack is1 : items) {
@@ -105,159 +110,54 @@ public class Main extends JavaPlugin implements Listener {
 		}
 	}
 
-	public boolean isDoubleChest(Block block) {
-		if(block.getState() instanceof Chest) {
-			Chest c = (Chest) block.getState();
-			return (c.getInventory().getHolder() instanceof DoubleChest);
-		}
-		return false;
-	}
-	
 	@EventHandler
 	public void blockBreakDoublechest(BlockBreakEvent event) {
-		// Handle doublechests.
-		/*
-		 * I've decided to handle doublechests separately Because of the way
-		 * they mess things up :P
-		 */
-
-		if (breakingChecks(event) && isDoubleChest(event.getBlock())) {
-			Chest c = (Chest) event.getBlock().getState();
-			DoubleChest dc = (DoubleChest) c.getInventory().getHolder();
-			
-			DoubleChestInventory inv = (DoubleChestInventory) dc.getInventory();
-
-			Chest left = (Chest) dc.getLeftSide(); 
-			Inventory leftInv = inv.getLeftSide();
-			Chest right = (Chest) dc.getRightSide();
-			Inventory rightInv = inv.getRightSide();
-			
-			Inventory chestInv = null;
-			
-			if(event.getBlock().equals(left.getBlock())) {
-				chestInv = leftInv;
-			} else if (event.getBlock().equals(right.getBlock())){
-				chestInv = rightInv;
-			} else {
-				throw new NullPointerException();
-			}
-
-			/* Serialize chest contents */
-			Player player = event.getPlayer();
+		if (breakingChecks(event) && Utils.isDoubleChest(event.getBlock())) {
 			event.setCancelled(true);
+			Block block = event.getBlock();
 
-			/* Prevents SilkChests being stored in SilkChests */
-			if (!getConfig().getBoolean("canStoreChestInChest")) {
+			Chest c = (Chest) block.getState();
+			DoubleChest dc = (DoubleChest) c.getInventory().getHolder();
 
-				/* Removes the SilkChests from the chest and drops them */
-				for (int i = 0; i < chestInv.getContents().length; i++) {
-					ItemStack is = chestInv.getItem(i);
-					if (is != null) {
-						if (chestCheck(is.getType()) && is.hasItemMeta()) {
-							if (is.getItemMeta().hasLore()) {
-								if (!is.getItemMeta().getLore().isEmpty()) {
-									if (is.getItemMeta().getLore().get(0).equals("SilkChest")) {
-										player.getWorld().dropItem(event.getBlock().getLocation(), is);
-										chestInv.remove(is);
-									}
-								}
-							}
-						}
-					}
-				}
-			}
+			Chest left = (Chest) dc.getLeftSide();
+			Chest right = (Chest) dc.getRightSide();
 
-			String serializedString = serialize(Arrays.asList(chestInv.getContents()));
+			DoubleChestInventory inv = (DoubleChestInventory) dc.getInventory();
+			Inventory leftInv = inv.getLeftSide();
+			Inventory rightInv = inv.getRightSide();
+			Inventory chestInv = null;
 
-			/* Create the chest item */
-			ItemStack is = new ItemStack(Material.CHEST);
-			
-			ItemMeta meta = is.getItemMeta();
-			meta.setLore(Arrays.asList(new String[] { "SilkChest" }));
-			is.setItemMeta(meta);
+			if (block.equals(left.getBlock()))
+				chestInv = leftInv;
+			else if (block.equals(right.getBlock()))
+				chestInv = rightInv;
+			else
+				throw new NullPointerException();
 
-			/*
-			 * Add the contents to the chest, drop the item and remove the chest
-			 * block
-			 */
-			ItemStack newItemStack = Utils.setNBT(is, serializedString);
-			player.getWorld().dropItem(event.getBlock().getLocation(), newItemStack);
-			chestInv.clear();
-			event.getBlock().setType(Material.AIR);
+			if (!getConfig().getBoolean("canStoreChestInChest"))
+				chestInv = InventoryManager.canStoreChestInChest(chestInv, block);
 
+			InventoryManager.addMetaAndDrop(new ItemStack(Material.CHEST), chestInv, event.getBlock());
 		}
 	}
 
 	@EventHandler
 	public void blockBreakChest(BlockBreakEvent event) {
-		if (breakingChecks(event) && !(isDoubleChest(event.getBlock()))) {
-			
-			/* Serialize chest contents */
-			Player player = event.getPlayer();
-			Chest chest = (Chest) event.getBlock().getState();
+		if (breakingChecks(event) && !(Utils.isDoubleChest(event.getBlock()))) {
 			event.setCancelled(true);
+			Chest chest = (Chest) event.getBlock().getState();
+			Inventory chestInv = chest.getInventory();
+			
+			if (!getConfig().getBoolean("canStoreChestInChest"))
+				chestInv = InventoryManager.canStoreChestInChest(chestInv, event.getBlock());
 
-			/* Prevents SilkChests being stored in SilkChests */
-			if (!getConfig().getBoolean("canStoreChestInChest")) {
-
-				/* Removes the SilkChests from the chest and drops them */
-				for (int i = 0; i < chest.getInventory().getContents().length; i++) {
-					ItemStack is = chest.getInventory().getItem(i);
-					if (is != null) {
-						if (chestCheck(is.getType()) && is.hasItemMeta()) {
-							if (is.getItemMeta().hasLore()) {
-								if (!is.getItemMeta().getLore().isEmpty()) {
-									if (is.getItemMeta().getLore().get(0).equals("SilkChest")) {
-										player.getWorld().dropItem(event.getBlock().getLocation(), is);
-										chest.getInventory().remove(is);
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-
-			String serializedString = serialize(Arrays.asList(chest.getInventory().getContents()));
-
-			/* Create the chest item */
 			ItemStack is = new ItemStack(Material.CHEST);
-			if (getConfig().getBoolean("useTrappedChests")) {
-				if (event.getBlock().getType().equals(Material.TRAPPED_CHEST)) {
+			
+			if (getConfig().getBoolean("useTrappedChests"))
+				if (event.getBlock().getType().equals(Material.TRAPPED_CHEST))
 					is = new ItemStack(Material.TRAPPED_CHEST);
-				}
-			}
-			ItemMeta meta = is.getItemMeta();
-			meta.setLore(Arrays.asList(new String[] { "SilkChest" }));
-			is.setItemMeta(meta);
-
-			/*
-			 * Add the contents to the chest, drop the item and remove the chest
-			 * block
-			 */
-			ItemStack newItemStack = Utils.setNBT(is, serializedString);
-			player.getWorld().dropItem(event.getBlock().getLocation(), newItemStack);
-			chest.getInventory().clear();
-			event.getBlock().setType(Material.AIR);
+			
+			InventoryManager.addMetaAndDrop(is, chestInv, event.getBlock());
 		}
-	}
-
-	/* Turns item stacks into a string */
-	public String serialize(List<ItemStack> items) {
-		YamlConfiguration config = new YamlConfiguration();
-		config.set("Items", items);
-		return Base64Coder.encodeString(config.saveToString());
-	}
-
-	/* Converts the string back into itemstacks */
-	@SuppressWarnings("unchecked")
-	public List<ItemStack> deserialize(String s) {
-		YamlConfiguration config = new YamlConfiguration();
-		try {
-			config.loadFromString(Base64Coder.decodeString(s));
-			return (List<ItemStack>) config.get("Items");
-		} catch (InvalidConfigurationException e) {
-		}
-		return null;
 	}
 }
