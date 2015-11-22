@@ -7,9 +7,11 @@ import org.bukkit.command.CommandSender;
 
 public class SilkChestsCommand implements CommandExecutor {
 
-	String prefix = ChatColor.GOLD + "[" + ChatColor.YELLOW + "SilkChests" + ChatColor.GOLD + "] " + ChatColor.YELLOW;
+	String prefix = ChatColor.GOLD + "[" + ChatColor.YELLOW + "SilkChests" + ChatColor.GOLD + "] " + ChatColor.WHITE;
+	Main main;
 	
 	public SilkChestsCommand(Main main) {
+		this.main = main;
 	}
 
 	@Override
@@ -21,8 +23,19 @@ public class SilkChestsCommand implements CommandExecutor {
 				sender.sendMessage(prefix + "");
 			}
 			if(args.length > 0) {
-				switch(args[0]) {
-					
+				switch(args[0].toLowerCase()) {
+					case "reload":
+						main.saveConfig();
+						main.updateInternalConfig();
+						sender.sendMessage(prefix + "SilkChests has been reloaded!");
+						break;
+					case "config":
+						sender.sendMessage("Trapped chests enabled: " + String.valueOf(Main.trappedChests));
+						sender.sendMessage("SilkChests inside Chests enabled: " + String.valueOf(Main.chestInChest));
+						//allow changing if args[1] (if args.length >1)
+						//on edit event, print new config
+						main.updateExternalConfig();
+						break;
 				}
 			}
 			

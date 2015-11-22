@@ -50,12 +50,16 @@ public class Main extends JavaPlugin implements Listener {
 	}
 
 	/*
-	 * Because this plugin is small, we can afford to use up some small space in
-	 * the memory
+	 * Internal config is updated based on config.yml file
 	 */
-	private void updateInternalConfig() {
+	protected void updateInternalConfig() {
 		trappedChests = getConfig().getBoolean("useTrappedChests");
 		chestInChest = getConfig().getBoolean("canStoreChestInChest");
+	}
+	
+	protected void updateExternalConfig() {
+		getConfig().set("useTrappedChests", trappedChests);
+		getConfig().set("canStoreChestInChest", chestInChest);
 	}
 
 	@Override
