@@ -9,21 +9,30 @@ public class SilkChestsCommand implements CommandExecutor {
 
 	String prefix = ChatColor.GOLD + "[" + ChatColor.YELLOW + "SilkChests" + ChatColor.GOLD + "] " + ChatColor.WHITE;
 	Main main;
-	
+
 	public SilkChestsCommand(Main main) {
 		this.main = main;
 	}
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-		if(command.getName().equalsIgnoreCase("silkchests") && sender.hasPermission("silkchests.admin")) {
-			if(args.length == 0) {
-				/* AA center code goes here, list of commands (reload) (config - views current setup) */
-				/* cmds to modify config ingame, make sure it updates config.yml file!! */
-				sender.sendMessage(prefix + "");
+		if (command.getName().equalsIgnoreCase("silkchests") && sender.hasPermission("silkchests.admin")) {
+			if (args.length == 0) {
+				/*
+				 * cmds to modify config ingame, make sure it updates config.yml
+				 * file!!
+				 */
+				sender.sendMessage(Utils.center("-- " + prefix + "--"));
+				sender.sendMessage("Available commands:");
+				sender.sendMessage(ChatColor.YELLOW + "/silkchest reload" + ChatColor.WHITE
+						+ " - reloads the SilkChest config");
+				sender.sendMessage(ChatColor.YELLOW + "/silkchest config" + ChatColor.WHITE
+						+ " - shows what is currently enabled/disabled");
+				sender.sendMessage(ChatColor.YELLOW + "/silkchest configupdate [config key] [config value]" + ChatColor.WHITE
+						+ " - edits the config ingame");
 			}
-			if(args.length > 0) {
-				switch(args[0].toLowerCase()) {
+			if (args.length > 0) {
+				switch (args[0].toLowerCase()) {
 					case "reload":
 						main.saveConfig();
 						main.updateInternalConfig();
@@ -32,13 +41,28 @@ public class SilkChestsCommand implements CommandExecutor {
 					case "config":
 						sender.sendMessage("Trapped chests enabled: " + String.valueOf(Main.trappedChests));
 						sender.sendMessage("SilkChests inside Chests enabled: " + String.valueOf(Main.chestInChest));
-						//allow changing if args[1] (if args.length >1)
-						//on edit event, print new config
-						main.updateExternalConfig();
+						break;
+					case "configupdate":
+						sender.sendMessage(prefix + "Current keys: canStoreChestInChest, useTrappedChests");
+						if (args.length == 3) {
+							switch (args[1].toLowerCase()) {
+								case "canstoreshestinshest":
+										Main.chestInChest = Boolean.parseBoolean(args[2]);
+									break;
+								case "usetrappedchests":
+									Main.trappedChests = Boolean.parseBoolean(args[2]);
+									break;
+							}
+							main.updateExternalConfig();
+							sender.sendMessage("Trapped chests enabled: " + String.valueOf(Main.trappedChests));
+							sender.sendMessage("SilkChests inside Chests enabled: " + String.valueOf(Main.chestInChest));
+						} else {
+							sender.sendMessage(prefix + "Invalid syntax, use /silkchests to see the format");
+						}
 						break;
 				}
 			}
-			
+
 		}
 		return false;
 	}

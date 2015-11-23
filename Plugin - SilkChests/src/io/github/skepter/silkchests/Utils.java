@@ -2,6 +2,7 @@ package io.github.skepter.silkchests;
 
 import java.util.List;
 
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
@@ -95,6 +96,15 @@ public class Utils {
 			return (c.getInventory().getHolder() instanceof DoubleChest);
 		}
 		return false;
+	}
+	
+	/** Centers text (From AllAssets) */
+	protected static String center(final String text) {
+		final int spaces = (int) Math.round((80 - (1.4 * ChatColor.stripColor(text).length())) / 2);
+		String s = "";
+		for (int i = 0; i < spaces; i++)
+			s = s + " ";
+		return s + text;
 	}
 
 }
