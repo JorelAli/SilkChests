@@ -18,11 +18,7 @@ public class SilkChestsCommand implements CommandExecutor {
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		if (command.getName().equalsIgnoreCase("silkchests") && sender.hasPermission("silkchests.admin")) {
 			if (args.length == 0) {
-				/*
-				 * cmds to modify config ingame, make sure it updates config.yml
-				 * file!!
-				 */
-				sender.sendMessage(Utils.center("-- " + prefix + "--"));
+				sender.sendMessage(Utils.center("-- " + prefix + main.getDescription().getVersion() +  "--"));
 				sender.sendMessage("Available commands:");
 				sender.sendMessage(ChatColor.YELLOW + "/silkchest reload" + ChatColor.WHITE
 						+ " - reloads the SilkChest config");
