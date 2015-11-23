@@ -129,21 +129,15 @@ public class Main extends JavaPlugin implements Listener {
 			event.setCancelled(true);
 			Block block = event.getBlock();
 
-			Chest c = (Chest) block.getState();
-			DoubleChest dc = (DoubleChest) c.getInventory().getHolder();
-
-			Chest left = (Chest) dc.getLeftSide();
-			Chest right = (Chest) dc.getRightSide();
+			DoubleChest dc = (DoubleChest) ((Chest) block.getState()).getInventory().getHolder();
 
 			DoubleChestInventory inv = (DoubleChestInventory) dc.getInventory();
-			Inventory leftInv = inv.getLeftSide();
-			Inventory rightInv = inv.getRightSide();
 			Inventory chestInv = null;
 
-			if (block.equals(left.getBlock()))
-				chestInv = leftInv;
-			else if (block.equals(right.getBlock()))
-				chestInv = rightInv;
+			if (block.equals(((Chest)dc.getLeftSide()).getBlock()))
+				chestInv = inv.getLeftSide();
+			else if (block.equals(((Chest)dc.getRightSide()).getBlock()))
+				chestInv = inv.getRightSide();
 			else
 				throw new NullPointerException();
 
