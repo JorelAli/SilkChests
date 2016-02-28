@@ -3,3 +3,9 @@ main: io.github.skepter.silkchests.Main
 version: 1.5
 description: Use SilkTouch on chests!
 author: Skepter
+
+commands:
+   silkchests:
+     description: Opens the silkchests help menu
+     aliases: [silkchest]
+     permission: silkchests.admin

@@ -18,7 +18,7 @@ public class SilkChestsCommand implements CommandExecutor {
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 		if (command.getName().equalsIgnoreCase("silkchests") && sender.hasPermission("silkchests.admin")) {
 			if (args.length == 0) {
-				sender.sendMessage(Utils.center("-- " + prefix + main.getDescription().getVersion() +  "--"));
+				sender.sendMessage(Utils.center("-- " + prefix + main.getDescription().getVersion() +  " --"));
 				sender.sendMessage("Available commands:");
 				sender.sendMessage(ChatColor.YELLOW + "/silkchest reload" + ChatColor.WHITE
 						+ " - reloads the SilkChest config");
@@ -35,32 +35,39 @@ public class SilkChestsCommand implements CommandExecutor {
 						sender.sendMessage(prefix + "SilkChests has been reloaded!");
 						break;
 					case "config":
-						sender.sendMessage("Trapped chests enabled: " + String.valueOf(Main.trappedChests));
-						sender.sendMessage("SilkChests inside Chests enabled: " + String.valueOf(Main.chestInChest));
+						sender.sendMessage("Trapped chests enabled: " + getBoolean(Main.trappedChests));
+						sender.sendMessage("SilkChests inside Chests enabled: " + getBoolean(Main.chestInChest));
 						break;
 					case "configupdate":
 						sender.sendMessage(prefix + "Current keys: canStoreChestInChest, useTrappedChests");
 						if (args.length == 3) {
 							switch (args[1].toLowerCase()) {
-								case "canstoreshestinshest":
-										Main.chestInChest = Boolean.parseBoolean(args[2]);
+								case "canstorechestinchest":
+									Main.chestInChest = Boolean.parseBoolean(args[2]);
 									break;
 								case "usetrappedchests":
 									Main.trappedChests = Boolean.parseBoolean(args[2]);
 									break;
+								default:
+									sender.sendMessage(prefix + "Invalid syntax, use /silkchests to see the format");
+									return true;
 							}
 							main.updateExternalConfig();
-							sender.sendMessage("Trapped chests enabled: " + String.valueOf(Main.trappedChests));
-							sender.sendMessage("SilkChests inside Chests enabled: " + String.valueOf(Main.chestInChest));
+							sender.sendMessage("Trapped chests enabled: " + getBoolean(Main.trappedChests));
+							sender.sendMessage("SilkChests inside Chests enabled: " + getBoolean(Main.chestInChest));
 						} else {
 							sender.sendMessage(prefix + "Invalid syntax, use /silkchests to see the format");
 						}
 						break;
 				}
 			}
-
+			return true;
 		}
 		return false;
+	}
+	
+	private String getBoolean(boolean value) {
+		return value ? ChatColor.GREEN + String.valueOf(value) : ChatColor.RED + String.valueOf(value);
 	}
 
 }

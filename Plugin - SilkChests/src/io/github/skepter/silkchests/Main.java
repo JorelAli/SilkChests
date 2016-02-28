@@ -60,6 +60,7 @@ public class Main extends JavaPlugin implements Listener {
 	protected void updateExternalConfig() {
 		getConfig().set("useTrappedChests", trappedChests);
 		getConfig().set("canStoreChestInChest", chestInChest);
+		saveConfig();
 	}
 
 	@Override
@@ -143,8 +144,14 @@ public class Main extends JavaPlugin implements Listener {
 
 			if (!chestInChest)
 				chestInv = InventoryManager.canStoreChestInChest(chestInv, block);
+			
+			ItemStack is = new ItemStack(Material.CHEST);
+			
+			if (trappedChests)
+				if (event.getBlock().getType().equals(Material.TRAPPED_CHEST))
+					is = new ItemStack(Material.TRAPPED_CHEST);
 
-			InventoryManager.addMetaAndDrop(new ItemStack(Material.CHEST), chestInv, event.getBlock());
+			InventoryManager.addMetaAndDrop(is, chestInv, event.getBlock());
 		}
 	}
 
