@@ -56,7 +56,7 @@ public class Main extends JavaPlugin implements Listener {
 		trappedChests = getConfig().getBoolean("useTrappedChests");
 		chestInChest = getConfig().getBoolean("canStoreChestInChest");
 	}
-	
+
 	protected void updateExternalConfig() {
 		getConfig().set("useTrappedChests", trappedChests);
 		getConfig().set("canStoreChestInChest", chestInChest);
@@ -93,8 +93,7 @@ public class Main extends JavaPlugin implements Listener {
 		Block block = event.getBlock();
 		Player player = event.getPlayer();
 		if (!player.hasPermission("silkchest.use") || !Utils.isChest(block.getType())
-				|| !player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH)
-				|| !(block.getState() instanceof Chest))
+				|| !player.getItemInHand().containsEnchantment(Enchantment.SILK_TOUCH) || !(block.getState() instanceof Chest))
 			return false;
 		if (hasWorldGuard && hasLockette) {
 			return (WGBukkit.getPlugin().canBuild(player, block) && Lockette.isOwner(block, player));
@@ -113,11 +112,13 @@ public class Main extends JavaPlugin implements Listener {
 
 			/* Get deserialized items and put it into the chest */
 			Collection<ItemStack> items = Utils.deserialize(Utils.getNBT(event.getItemInHand()));
-			if ((event.getBlock().getState() instanceof Chest)) {
-				Chest chest = (Chest) event.getBlock().getState();
-				for (ItemStack is1 : items) {
-					if (is1 != null) {
-						chest.getInventory().addItem(new ItemStack[] { is1 });
+			if (items != null) {
+				if ((event.getBlock().getState() instanceof Chest)) {
+					Chest chest = (Chest) event.getBlock().getState();
+					for (ItemStack is1 : items) {
+						if (is1 != null) {
+							chest.getInventory().addItem(new ItemStack[] { is1 });
+						}
 					}
 				}
 			}
@@ -135,18 +136,18 @@ public class Main extends JavaPlugin implements Listener {
 			DoubleChestInventory inv = (DoubleChestInventory) dc.getInventory();
 			Inventory chestInv = null;
 
-			if (block.equals(((Chest)dc.getLeftSide()).getBlock()))
+			if (block.equals(((Chest) dc.getLeftSide()).getBlock()))
 				chestInv = inv.getLeftSide();
-			else if (block.equals(((Chest)dc.getRightSide()).getBlock()))
+			else if (block.equals(((Chest) dc.getRightSide()).getBlock()))
 				chestInv = inv.getRightSide();
 			else
 				throw new NullPointerException();
 
 			if (!chestInChest)
 				chestInv = InventoryManager.canStoreChestInChest(chestInv, block);
-			
+
 			ItemStack is = new ItemStack(Material.CHEST);
-			
+
 			if (trappedChests)
 				if (event.getBlock().getType().equals(Material.TRAPPED_CHEST))
 					is = new ItemStack(Material.TRAPPED_CHEST);
